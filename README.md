@@ -1,74 +1,104 @@
-# Atlas NLP Research Radar
+# ScholarTrend AI
 
-Atlas is a resume-ready multi-agent research assistant for tracking recent NLP topics. It combines scholarly search, local-document RAG, short-term memory, evaluation metrics, and an optional OpenAI synthesis layer to explain what researchers are working on right now.
+ScholarTrend AI is a multi-agent LLM research assistant that discovers recent scholarly papers, ranks the most relevant evidence, summarizes key workstreams, clusters emerging themes, and produces executive-ready research briefs with citations.
 
-## What it demonstrates
+It is designed as a resume-grade systems project that demonstrates:
 
-- Multi-agent orchestration with `Planner`, `Researcher`, `Critic`, and `Writer` agents.
-- Retrieval-augmented generation over uploaded PDFs, notes, and local files.
-- Scholarly aggregation from arXiv, Semantic Scholar, and Crossref.
-- Optional OpenAI structured outputs for planning, topic extraction, critique, and report writing.
-- A frontend dashboard for running research workflows and reviewing results.
+- multi-agent orchestration with LangGraph
+- retrieval-augmented generation over paper abstracts
+- hybrid search and ranking across academic APIs
+- grounded summarization with critic validation
+- FastAPI backend plus Streamlit frontend
+- LLM provider switching across OpenAI, Anthropic, and Ollama
 
-## Repo layout
+## Key Features
 
-- `backend/`: FastAPI service, agent orchestration, RAG, memory, and evaluation.
-- `frontend/`: React + TypeScript dashboard for submitting queries and reading reports.
-- `docs/architecture.md`: high-level system design and request flow.
-- `evals/`: starter evaluation scenarios for future quality checks.
-- `fine_tuning/`: placeholder assets for later supervised tuning experiments.
+- Query Planner Agent expands a user topic into domain-aware academic queries.
+- Literature Search Agent retrieves papers from arXiv, Semantic Scholar, Crossref, OpenAlex, and PubMed when relevant.
+- Relevance Ranking Agent applies hybrid ranking using semantic similarity, recency, keyword overlap, citation signal, and source credibility.
+- Paper Summarization Agent extracts problem, method, datasets, findings, limitations, and future work.
+- Trend Discovery Agent clusters papers into themes and identifies repeated methods and research gaps.
+- Critic / Validation Agent checks grounding, citation completeness, and weak claims.
+- Report Writer Agent composes a structured research trend brief in Markdown and PDF.
 
-## How the workflow works
+## Repository Structure
 
-1. The `Planner` turns the user question into focus areas and paper-search queries.
-2. The `Researcher` gathers recent papers plus supporting passages from uploaded documents.
-3. The `Critic` checks for weak evidence, stale sources, and overclaiming.
-4. The `Writer` produces a markdown brief with a topic radar, evidence base, and next steps.
-
-## Running locally
-
-### 1. Environment
-
-Create a `.env` file from `.env.example`.
-
-Important settings:
-
-- `SCHOLARLY_SEARCH_PROVIDERS=arxiv,semantic_scholar,crossref`
-- `OPENAI_API_KEY=` to enable structured-output planning and synthesis
-- `EMBEDDING_PROVIDER=hash` for offline local demos, or `openai` for hosted embeddings
-
-### 2. Backend
-
-```bash
-cd backend
-python3 -m pip install -e ".[dev]"
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```text
+src/
+  agents/
+  api/
+  evaluation/
+  models/
+  providers/
+  retrieval/
+  storage/
+  tools/
+  utils/
+  workflows/
+tests/
+frontend/
+notebooks/
+docs/
+samples/
 ```
 
-### 3. Frontend
+## Local Setup
 
 ```bash
-cd frontend
-npm install
-npm run dev -- --host 0.0.0.0 --port 3000
+cp .env.example .env
+pip install -r requirements.txt
+uvicorn src.api.main:app --reload
+streamlit run frontend/app.py
 ```
 
-### 4. Docker
+The FastAPI server runs on `http://127.0.0.1:8000` by default and the Streamlit app runs on `http://127.0.0.1:8501`.
+
+## API Quick Start
+
+Sample request:
 
 ```bash
-docker compose up --build
+curl -X POST http://127.0.0.1:8000/api/v1/research/report \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "Agentic AI in financial services",
+    "time_range": "1y",
+    "paper_limit": 12,
+    "sources": ["arxiv", "semantic_scholar", "crossref", "openalex"],
+    "llm_provider": "mock"
+  }'
 ```
 
-## Suggested demo flow
+See [docs/api.md](/Users/shailendra/Documents/New%20project/docs/api.md:1) for full request and response documentation.
 
-1. Upload 1-2 survey papers or lab notes in PDF or Markdown format.
-2. Ask a question such as:
-   - `What recent topics are researchers actively exploring in NLP around reasoning, tool use, and retrieval-augmented generation?`
-   - `Summarize recent multilingual NLP trends and open evaluation gaps.`
-3. Review the generated `Topic Radar`, risks, and evidence base.
+## Sample Output
 
-## Resume pitch
+- Sample report: [samples/reports/agentic_ai_financial_services.md](/Users/shailendra/Documents/New%20project/samples/reports/agentic_ai_financial_services.md:1)
+- Sample API response: [samples/api/sample_response.json](/Users/shailendra/Documents/New%20project/samples/api/sample_response.json:1)
 
-If you want to describe this project on your resume or LinkedIn, a concise version could be:
+## Architecture
 
-> Built a multi-agent NLP research assistant with FastAPI + React that aggregates recent papers from scholarly APIs, applies RAG over uploaded documents, and uses structured LLM outputs to generate evidence-grounded research briefings.
+- Architecture diagram: [docs/architecture.md](/Users/shailendra/Documents/New%20project/docs/architecture.md:1)
+- System design: [docs/system_design.md](/Users/shailendra/Documents/New%20project/docs/system_design.md:1)
+
+## Resume Talking Points
+
+- Built a multi-agent LLM research assistant using LangGraph, hybrid scholarly retrieval, semantic ranking, and RAG over paper abstracts to identify emerging research trends.
+- Implemented query planning, literature retrieval, deduplication, ranking, grounded summarization, critic validation, and trend clustering agents in Python.
+- Designed an LLM provider abstraction to switch between OpenAI, Anthropic, Ollama, and deterministic mock mode for local development.
+- Developed a FastAPI backend, Streamlit frontend, SQLite-backed caching and metadata persistence, Markdown/PDF report export, and CI-ready pytest suite.
+
+## Interview Explanation
+
+ScholarTrend AI is structured as a stateful research pipeline instead of a single prompt. The workflow starts with topic expansion and academic source selection, then gathers papers asynchronously from multiple APIs, deduplicates them, ranks them with both semantic and symbolic signals, summarizes each paper in a grounded format, clusters themes with embeddings, and finally asks a critic stage to verify that the brief is still supported by retrieved evidence. The report writer is intentionally downstream of validation so the final business-facing brief is built on curated evidence rather than raw search output.
+
+From a systems-design angle, the project shows how to separate orchestration, provider abstractions, retrieval, ranking, evaluation, and presentation layers. That separation makes it easier to swap LLMs, add sources, or move from SQLite to Postgres without rewriting the full pipeline.
+
+## Future Enhancements
+
+- Add authenticated multi-user workspaces and saved research collections.
+- Support background jobs with Celery or Arq for large literature reviews.
+- Add real citation graph analytics using OpenAlex related-work endpoints.
+- Introduce human approval checkpoints directly inside the LangGraph workflow.
+- Expand evaluation with graded relevance judgments and summary-faithfulness benchmarks.
+- Add benchmark dashboards for trend quality over time.

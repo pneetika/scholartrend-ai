@@ -1,0 +1,1 @@
+"""ScholarTrend AI application package."""

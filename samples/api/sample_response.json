@@ -1,0 +1,10 @@
+{
+  "run_id": "run-demo-001",
+  "topic": "Agentic AI in financial services",
+  "executive_summary": "Recent literature on Agentic AI in financial services is coalescing around tool-using, retrieval-grounded systems and stronger evaluation practices.",
+  "recent_trends": [
+    "Tool-Using Financial Agents: Research is focusing on auditable multi-step workflows.",
+    "Evaluation and Safety: Papers increasingly measure reliability, oversight, and risk."
+  ],
+  "human_review_required": false
+}

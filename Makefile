@@ -1,29 +1,28 @@
 PYTHON ?= python3
-NPM ?= npm
+PIP ?= pip
 
-.PHONY: backend-install frontend-install backend-dev frontend-dev dev test docker-up docker-down
+.PHONY: install api frontend test format lint sample docker-up
 
-backend-install:
-	cd backend && $(PYTHON) -m pip install -e ".[dev]"
+install:
+	$(PIP) install -r requirements.txt
 
-frontend-install:
-	cd frontend && $(NPM) install
+api:
+	uvicorn src.api.main:app --reload
 
-backend-dev:
-	cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
-frontend-dev:
-	cd frontend && $(NPM) run dev -- --host 0.0.0.0 --port 3000
-
-dev:
-	@echo "Run \`make backend-dev\` and \`make frontend-dev\` in separate terminals."
+frontend:
+	streamlit run frontend/app.py
 
 test:
-	cd backend && pytest
+	pytest
+
+format:
+	python -m compileall src tests
+
+lint:
+	python -m compileall src tests
+
+sample:
+	python -m src.cli "Agentic AI in financial services" --provider mock --paper-limit 10
 
 docker-up:
 	docker compose up --build
-
-docker-down:
-	docker compose down
-
