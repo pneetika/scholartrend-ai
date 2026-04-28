@@ -1,0 +1,21 @@
+[
+  {
+    "id": "competitive-landscape",
+    "query": "Compare the current competitive landscape for retrieval-augmented generation tools in enterprise support.",
+    "goals": [
+      "Summarize major competitors",
+      "Identify differentiators",
+      "Surface adoption risks"
+    ]
+  },
+  {
+    "id": "policy-brief",
+    "query": "Prepare a policy brief on the risks and opportunities of deploying multi-agent assistants in regulated environments.",
+    "goals": [
+      "List governance concerns",
+      "Describe monitoring controls",
+      "Recommend next steps"
+    ]
+  }
+]
+
