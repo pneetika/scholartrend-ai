@@ -2,24 +2,43 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import date, timedelta
 from io import BytesIO
 from typing import Any, Dict
 
 import pandas as pd
 import requests
 import streamlit as st
+from streamlit.errors import StreamlitSecretNotFoundError
 
-API_BASE_URL = st.secrets.get("STREAMLIT_API_BASE_URL", None) or os.environ.get(
-    "STREAMLIT_API_BASE_URL",
-    "http://127.0.0.1:8000/api/v1",
-)
+
+def resolve_api_base_url() -> str:
+    try:
+        secret_value = st.secrets.get("STREAMLIT_API_BASE_URL")
+        if secret_value:
+            return str(secret_value)
+    except StreamlitSecretNotFoundError:
+        pass
+
+    return os.environ.get(
+        "STREAMLIT_API_BASE_URL",
+        "http://127.0.0.1:8000/api/v1",
+    )
+
+
+API_BASE_URL = resolve_api_base_url()
 
 st.set_page_config(page_title="ScholarTrend AI", page_icon="📚", layout="wide")
 
 
 def fetch_report(payload: Dict[str, Any]) -> Dict[str, Any]:
     response = requests.post(f"{API_BASE_URL}/research/report", json=payload, timeout=180)
-    response.raise_for_status()
+    if not response.ok:
+        try:
+            detail = response.json()
+        except Exception:
+            detail = response.text
+        raise RuntimeError(f"API request failed with status {response.status_code}: {detail}")
     return response.json()
 
 
@@ -41,12 +60,28 @@ def main() -> None:
             options=["arxiv", "semantic_scholar", "crossref", "openalex", "pubmed"],
             default=["arxiv", "semantic_scholar", "crossref", "openalex"],
         )
+        custom_start_date = None
+        custom_end_date = None
+        if time_range == "custom":
+            custom_start_date = st.date_input("Start date", value=date.today() - timedelta(days=365))
+            custom_end_date = st.date_input("End date", value=date.today())
         provider = st.selectbox("LLM provider", ["mock", "openai", "anthropic", "ollama"], index=0)
         require_human_review = st.checkbox("Require human review", value=False)
         run_button = st.button("Generate Research Brief", type="primary", use_container_width=True)
 
     if not run_button:
         st.info("Configure the topic and click **Generate Research Brief**.")
+        return
+
+    topic = topic.strip()
+    if len(topic) < 5:
+        st.error("Please enter a research topic with at least 5 characters.")
+        return
+    if not sources:
+        st.error("Please select at least one academic source.")
+        return
+    if time_range == "custom" and custom_start_date and custom_end_date and custom_start_date > custom_end_date:
+        st.error("Custom start date must be earlier than or equal to the end date.")
         return
 
     payload = {
@@ -57,9 +92,17 @@ def main() -> None:
         "llm_provider": provider,
         "require_human_review": require_human_review,
     }
+    if time_range == "custom":
+        payload["custom_start_date"] = custom_start_date.isoformat() if custom_start_date else None
+        payload["custom_end_date"] = custom_end_date.isoformat() if custom_end_date else None
 
-    with st.spinner("Running ScholarTrend AI workflow..."):
-        result = fetch_report(payload)
+    try:
+        with st.spinner("Running ScholarTrend AI workflow..."):
+            result = fetch_report(payload)
+    except Exception as exc:
+        st.error(str(exc))
+        st.code(json.dumps(payload, indent=2), language="json")
+        return
 
     st.subheader("Executive Summary")
     st.write(result["executive_summary"])
