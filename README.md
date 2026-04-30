@@ -81,24 +81,4 @@ See [docs/api.md](/Users/shailendra/Documents/New%20project/docs/api.md:1) for f
 - Architecture diagram: [docs/architecture.md](/Users/shailendra/Documents/New%20project/docs/architecture.md:1)
 - System design: [docs/system_design.md](/Users/shailendra/Documents/New%20project/docs/system_design.md:1)
 
-## Resume Talking Points
 
-- Built a multi-agent LLM research assistant using LangGraph, hybrid scholarly retrieval, semantic ranking, and RAG over paper abstracts to identify emerging research trends.
-- Implemented query planning, literature retrieval, deduplication, ranking, grounded summarization, critic validation, and trend clustering agents in Python.
-- Designed an LLM provider abstraction to switch between OpenAI, Anthropic, Ollama, and deterministic mock mode for local development.
-- Developed a FastAPI backend, Streamlit frontend, SQLite-backed caching and metadata persistence, Markdown/PDF report export, and CI-ready pytest suite.
-
-## Interview Explanation
-
-ScholarTrend AI is structured as a stateful research pipeline instead of a single prompt. The workflow starts with topic expansion and academic source selection, then gathers papers asynchronously from multiple APIs, deduplicates them, ranks them with both semantic and symbolic signals, summarizes each paper in a grounded format, clusters themes with embeddings, and finally asks a critic stage to verify that the brief is still supported by retrieved evidence. The report writer is intentionally downstream of validation so the final business-facing brief is built on curated evidence rather than raw search output.
-
-From a systems-design angle, the project shows how to separate orchestration, provider abstractions, retrieval, ranking, evaluation, and presentation layers. That separation makes it easier to swap LLMs, add sources, or move from SQLite to Postgres without rewriting the full pipeline.
-
-## Future Enhancements
-
-- Add authenticated multi-user workspaces and saved research collections.
-- Support background jobs with Celery or Arq for large literature reviews.
-- Add real citation graph analytics using OpenAlex related-work endpoints.
-- Introduce human approval checkpoints directly inside the LangGraph workflow.
-- Expand evaluation with graded relevance judgments and summary-faithfulness benchmarks.
-- Add benchmark dashboards for trend quality over time.
