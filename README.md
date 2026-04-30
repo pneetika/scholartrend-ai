@@ -2,7 +2,7 @@
 
 ScholarTrend AI is a multi-agent LLM research assistant that discovers recent scholarly papers, ranks the most relevant evidence, summarizes key workstreams, clusters emerging themes, and produces executive-ready research briefs with citations.
 
-It is designed as a resume-grade systems project that demonstrates:
+This project demonstrates:
 
 - multi-agent orchestration with LangGraph
 - retrieval-augmented generation over paper abstracts
